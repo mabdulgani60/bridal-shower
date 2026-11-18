@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BREAKING NEWS: Bridal Shower Alert!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fef08a;
+            background-image: radial-gradient(#facc15 2px, transparent 2px);
+            background-size: 24px 24px;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .font-fun {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+        .border-3 {
+            border-width: 3px;
+        }
+
+        /* Animasi Sirene Berkedip */
+        @keyframes sirenFlash {
+            0%, 100% { background-color: #ef4444; box-shadow: 0 0 25px #ef4444; transform: scale(1); }
+            50% { background-color: #3b82f6; box-shadow: 0 0 25px #3b82f6; transform: scale(1.08); }
+        }
+        .siren-light {
+            animation: sirenFlash 0.6s infinite alternate;
+        }
+
+        /* Running Text Berita Berjalan */
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: inline-flex;
+            white-space: nowrap;
+            animation: marquee 18s linear infinite;
+        }
+
+        /* Animasi Karakter Lari Dikejar Cincin (Ala Stiker GIF) */
+        @keyframes runBounce {
+            0%, 100% { transform: translateY(0px) rotate(-3deg); }
+            50% { transform: translateY(-10px) rotate(4deg); }
+        }
+        @keyframes ringChase {
+            0%, 100% { transform: translateX(0px) rotate(-15deg) scale(1); }
+            50% { transform: translateX(-14px) rotate(15deg) scale(1.15); }
+        }
+        @keyframes sweatDrop {
+            0% { opacity: 1; transform: translateY(0) scale(0.8); }
+            100% { opacity: 0; transform: translateY(15px) scale(1.2); }
+        }
+        .bride-run { animation: runBounce 0.35s infinite ease-in-out; }
+        .ring-chase { animation: ringChase 0.4s infinite ease-in-out; }
+        .sweat { animation: sweatDrop 0.8s infinite linear; }
+
+        /* Animasi Joget Heboh (Untuk Tiket Perayaan) */
+        @keyframes partyDance {
+            0%, 100% { transform: translateY(0) rotate(-8deg) scale(1); }
+            25% { transform: translateY(-14px) rotate(0deg) scale(1.06); }
+            50% { transform: translateY(0) rotate(8deg) scale(1); }
+            75% { transform: translateY(-14px) rotate(0deg) scale(1.06); }
+        }
+        .party-dance { animation: partyDance 0.65s infinite ease-in-out; }
+
+        /* Animasi Wiggle / Goyang Stiker */
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-4deg); }
+            50% { transform: rotate(4deg); }
+        }
+        .sticker-wiggle { animation: wiggle 1.2s infinite ease-in-out; }
+
+        /* Garis Polisi */
+        .police-tape {
+            background: repeating-linear-gradient(
+                -45deg,
+                #facc15,
+                #facc15 14px,
+                #18181b 14px,
+                #18181b 28px
+            );
+        }
+
+        /* Neo-Brutalism Card Shadow */
+        .brutal-card {
+            border: 3.5px solid #18181b;
+            box-shadow: 6px 6px 0px #18181b;
+        }
+        .brutal-btn {
+            border: 3px solid #18181b;
+            box-shadow: 4px 4px 0px #18181b;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .brutal-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #18181b;
+        }
+
+        /* Canvas Konfeti */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        @media print {
+            #topControlBar, #showControlBtn, #confettiCanvas, #noBtnContainer, #galleryHint {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-16 text-zinc-900">
+
+    <!-- Canvas Konfeti Perayaan -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Musik Latar Belakang: Subway Surfers (Main Theme) 2012 Original -->
+    <audio id="bgmAudio" src="subway-surfers.mp3" loop preload="auto"></audio>
+
+    <!-- Top Bar Kontrol Cepat (Bisa Disembunyikan Sebelum Screen Record) -->
+    <div id="topControlBar" class="hidden">
+        <div class="flex items-center gap-2">
+            <button id="soundToggleBtn" onclick="toggleAudio()" class="bg-yellow-400 text-zinc-900 font-bold text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-yellow-300 transition">
+                <span id="soundIcon">🎵</span> <span id="soundText">Musik Subway Surfer: OFF</span>
+            </button>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="openEditModal()" class="bg-pink-500 text-white font-bold text-xs px-3 py-1.5 rounded-full hover:bg-pink-400 transition">
+                ✏️ Edit Undangan
+            </button>
+            <button onclick="hideControlBar()" title="Sembunyikan bar ini agar rapi saat direkam layar" class="bg-zinc-700 text-zinc-200 font-bold text-xs px-2.5 py-1.5 rounded-full hover:bg-zinc-600 transition">
+                👁️‍🗨️ Sembunyikan
+            </button>
+        </div>
+    </div>
+
+    <!-- Tombol Mini Mengambang untuk Memunculkan Kembali Bar Edit -->
+    <button id="showControlBtn" onclick="showControlBar()" class="hidden fixed top-2 right-2 z-40 bg-zinc-900/70 text-white text-[10px] px-2.5 py-1 rounded-full backdrop-blur-sm border border-white/20">
+        ⚙️ Menu
+    </button>
+
+    <!-- Toast Notifikasi -->
+    <div id="toastBanner" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-zinc-900 text-yellow-300 font-bold text-xs sm:text-sm px-4 py-2 rounded-full border-2 border-white shadow-lg text-center"></div>
+
+    <!-- Kontainer Utama Mobile-First -->
+    <main class="max-w-md mx-auto px-4 pt-4">
+
+        <!-- TAMPILAN 1: UNDANGAN BREAKING NEWS -->
+        <div id="invitationView" class="space-y-5">
+
+            <!-- Header Breaking News TV -->
+            <div class="bg-white rounded-3xl overflow-hidden brutal-card">
+                <!-- Banner Merah TV -->
+                <div class="bg-red-600 text-white px-4 py-2.5 flex items-center justify-between border-b-4 border-zinc-900">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded-full siren-light inline-block border-2 border-white"></span>
+                        <span class="font-fun font-bold tracking-wider text-base sm:text-lg uppercase">BREAKING NEWS!</span>
+                    </div>
+                    <span class="bg-yellow-400 text-zinc-900 text-xs font-extrabold px-2.5 py-0.5 rounded-full uppercase animate-pulse">
+                        🔴 LIVE DARURAT
+                    </span>
+                </div>
+
+                <!-- Panggung Animasi: Foto Asli Bride Lari Dikejar Cincin Raksasa -->
+                <div class="bg-gradient-to-b from-sky-200 via-sky-100 to-amber-100 p-4 relative overflow-hidden border-b-4 border-zinc-900">
+                    <!-- Awan Bergerak -->
+                    <div class="flex justify-between items-center text-2xl opacity-90 mb-2">
+                        <span class="animate-bounce">☁️</span>
+                        <span class="bg-red-600 text-white text-[11px] font-extrabold px-3 py-0.5 rounded-full border-2 border-zinc-900 sticker-wiggle">
+                            🚨 STATUS SINGLE TERANCAM PUNAH!
+                        </span>
+                        <span class="animate-bounce" style="animation-delay: 0.3s;">☁️</span>
+                    </div>
+
+                    <!-- Adegan Foto Asli Bride Dikejar Cincin Raksasa -->
+                    <div class="my-2 relative flex items-center justify-center gap-2 sm:gap-3 pt-4 pb-2">
+                        <!-- Balon Teks Bride -->
+                        <div class="bg-white border-[2.5px] border-zinc-900 rounded-xl px-2.5 py-1 shadow-[2px_2px_0px_#18181b] -rotate-6 self-start mt-4 shrink-0">
+                            <span class="font-fun text-[11px] font-bold text-zinc-900">TOLOOONG!</span>
+                        </div>
+
+                        <!-- Foto Asli Tersangka Bergerak (Menggantikan SVG Kartun) -->
+                        <div class="relative bride-run shrink-0">
+                            <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-2xl drop-shadow" aria-hidden="true">👑</span>
+                            <span class="absolute -left-2 top-2 text-base sweat" aria-hidden="true">💦</span>
+                            <div class="w-28 h-28 sm:w-32 sm:h-32 bg-white p-1.5 rounded-2xl border-3 border-zinc-900 shadow-[4px_4px_0px_#18181b] overflow-hidden">
+                                <img
+                                    id="heroPhoto"
+                                    src="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36.jpeg"
+                                    alt="Foto Calon Pengantin"
+                                    class="w-full h-full object-cover rounded-xl border-2 border-zinc-900"
+                                >
+                            </div>
+                            <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-600 text-white font-fun text-[10px] font-bold px-2 py-0.5 rounded-md border-2 border-zinc-900 whitespace-nowrap">
+                                TERSANGKA!
+                            </span>
+                        </div>
+
+                        <!-- Cincin Berlian Raksasa Mengejar (SVG Asli) -->
+                        <div class="w-20 sm:w-24 shrink-0">
+                            <svg viewBox="0 0 110 100" class="w-full h-auto overflow-visible ring-chase">
+                                <!-- Efek Kecepatan -->
+                                <line x1="72" y1="28" x2="96" y2="28" stroke="#ef4444" stroke-width="3" stroke-linecap="round" />
+                                <line x1="77" y1="48" x2="104" y2="48" stroke="#ef4444" stroke-width="3" stroke-linecap="round" />
+                                <line x1="72" y1="68" x2="94" y2="68" stroke="#ef4444" stroke-width="3" stroke-linecap="round" />
+
+                                <!-- Lingkaran Cincin Emas -->
+                                <circle cx="38" cy="56" r="24" fill="none" stroke="#facc15" stroke-width="9" />
+                                <circle cx="38" cy="56" r="28.5" fill="none" stroke="#18181b" stroke-width="2.5" />
+                                <circle cx="38" cy="56" r="19.5" fill="none" stroke="#18181b" stroke-width="2.5" />
+
+                                <!-- Berlian Biru Berkilau -->
+                                <polygon points="24,26 31,14 45,14 52,26 38,38" fill="#38bdf8" stroke="#18181b" stroke-width="2.5" />
+                                <line x1="24" y1="26" x2="52" y2="26" stroke="#18181b" stroke-width="2" />
+                                <!-- Mata Jahil di Berlian -->
+                                <circle cx="34" cy="24" r="2" fill="#18181b" />
+                                <circle cx="42" cy="24" r="2" fill="#18181b" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Garis Lantai / Jalan Putus-putus -->
+                    <div class="w-[92%] mx-auto border-t-4 border-dashed border-zinc-900 my-2.5"></div>
+
+                    <div class="text-center">
+                        <span class="inline-block bg-zinc-900 text-yellow-300 font-fun text-xs sm:text-sm px-3 py-1 rounded-xl">
+                            "Detik-detik terakhir sebelum sah jadi Istri Orang!"
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Ticker Berita Berjalan (Marquee) -->
+                <div class="bg-zinc-900 text-yellow-400 py-2 overflow-hidden border-b-4 border-zinc-900">
+                    <div class="animate-marquee font-bold text-xs tracking-wide uppercase">
+                        <span class="mx-4">🚨 BREAKING NEWS: WARGA TONGKRONGAN HEBOH!</span>
+                        <span class="mx-4">💍 TERSANGKA NEKAT SOLD OUT DULUAN!</span>
+                        <span class="mx-4">😭 SAHABAT YANG MASIH JOMBLO MENANGIS DI POJOKAN!</span>
+                        <span class="mx-4">🎉 WAJIB HADIR DI SIDANG BRIDAL SHOWER!</span>
+                        <span class="mx-4">🚨 BREAKING NEWS: WARGA TONGKRONGAN HEBOH!</span>
+                        <span class="mx-4">💍 TERSANGKA NEKAT SOLD OUT DULUAN!</span>
+                        <span class="mx-4">😭 SAHABAT YANG MASIH JOMBLO MENANGIS DI POJOKAN!</span>
+                        <span class="mx-4">🎉 WAJIB HADIR DI SIDANG BRIDAL SHOWER!</span>
+                    </div>
+                </div>
+
+                <!-- Isi Laporan Investigasi -->
+                <div class="p-5 space-y-4">
+                    <div class="text-center">
+                        <span class="inline-block bg-pink-500 text-white text-xs font-extrabold px-3 py-1 rounded-full border-2 border-zinc-900 mb-2 uppercase">
+                            📋 Berkas Pemeriksaan Darurat
+                        </span>
+                        <h1 class="font-fun text-2xl sm:text-3xl font-bold text-zinc-900 leading-tight">
+                            SIDANG PELEPASAN MASA LAJANG
+                        </h1>
+                    </div>
+
+                    <!-- Kartu Tersangka -->
+                    <div class="bg-yellow-200 p-4 rounded-2xl border-3 border-zinc-900 relative">
+                        <div class="absolute -top-3 -right-2 bg-red-600 text-white text-[11px] font-extrabold px-2.5 py-0.5 rounded-lg border-2 border-zinc-900 rotate-6">
+                            TARGET UTAMA!
+                        </div>
+                        <p class="text-xs font-extrabold text-zinc-600 uppercase">Nama Tersangka (Bride-to-Be):</p>
+                        <p id="displayBrideName" class="font-fun text-2xl sm:text-3xl font-bold text-pink-600 mt-0.5">
+                            Kharisma Paramita
+                        </p>
+                    </div>
+
+                    <!-- Pasal Tuduhan Kocak -->
+                    <div class="bg-rose-100 p-4 rounded-2xl border-2 border-dashed border-zinc-900 space-y-1.5">
+                        <div class="flex items-center gap-2 font-extrabold text-red-600 text-sm">
+                            <span>⚖️</span>
+                            <span>PASAL TUDUHAN:</span>
+                        </div>
+                        <p id="displayCharge" class="text-sm font-medium text-zinc-800 leading-relaxed">
+                            Terbukti secara sah dan meyakinkan <strong>nekat sold out duluan</strong>, tega meninggalkan teman-teman seperjuangan yang masih jomblo atau hubungannya cuma wacana!
+                        </p>
+                    </div>
+
+                    <!-- Garis Polisi Pembatas -->
+                    <div class="h-3 w-full police-tape rounded-full border-2 border-zinc-900"></div>
+
+                    <!-- Detail Waktu, Lokasi & Dresscode -->
+                    <div class="space-y-2.5">
+                        <h2 class="font-fun text-lg font-bold text-zinc-900 flex items-center gap-2">
+                            <span>📍</span> Jadwal Interogasi &amp; Hura-Hura:
+                        </h2>
+
+                        <div class="grid grid-cols-1 gap-2.5 text-sm">
+                            <div class="bg-sky-100 p-3 rounded-2xl border-2 border-zinc-900 flex items-start gap-3">
+                                <span class="text-2xl">📅</span>
+                                <div>
+                                    <p class="text-[11px] font-extrabold text-sky-800 uppercase">Hari &amp; Tanggal</p>
+                                    <p id="displayDate" class="font-bold text-zinc-900">Sabtu, 12 Desember 2026</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-emerald-100 p-3 rounded-2xl border-2 border-zinc-900 flex items-start gap-3">
+                                <span class="text-2xl">⏰</span>
+                                <div>
+                                    <p class="text-[11px] font-extrabold text-emerald-800 uppercase">Jam Evakuasi</p>
+                                    <p id="displayTime" class="font-bold text-zinc-900">15.00 WIB – Sampai Capek Ketawa</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-amber-100 p-3 rounded-2xl border-2 border-zinc-900 flex items-start gap-3">
+                                <span class="text-2xl">🏠</span>
+                                <div>
+                                    <p class="text-[11px] font-extrabold text-amber-800 uppercase">Markas Rahasia (Lokasi)</p>
+                                    <p id="displayLocation" class="font-bold text-zinc-900">Skysuites, Tempat yang sama seperti dulu</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-purple-100 p-3 rounded-2xl border-2 border-zinc-900 flex items-start gap-3">
+                                <span class="text-2xl">👗</span>
+                                <div>
+                                    <p class="text-[11px] font-extrabold text-purple-800 uppercase">Dresscode Wajib</p>
+                                    <p id="displayDresscode" class="font-bold text-zinc-900">Wajib Baju Putih yang Cantekkk dan Kerudung Hitam</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Penambahan Galeri 7 Foto Asli (Barang Bukti Persahabatan) -->
+                    <div class="pt-3 border-t-2 border-zinc-200 space-y-2.5">
+                        <h2 class="font-fun text-lg font-bold text-zinc-900 flex items-center gap-2">
+                            <span>📸</span> Barang Bukti Persahabatan:
+                        </h2>
+                        <p id="galleryHint" class="hidden text-xs font-medium text-zinc-600">
+                            Klik foto untuk memperbesar atau dijadikan foto tersangka utama!
+                        </p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                            <button type="button" onclick="openPhotoModal('foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35.jpeg', 'Bukti #01: Momen seru bareng geng sebelum ada yang nyusul nikah!')" class="bg-white p-1.5 rounded-xl border-2 border-zinc-900 shadow-[3px_3px_0px_#18181b] hover:-translate-y-0.5 transition text-center -rotate-1 hover:rotate-0">
+                                <img src="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35.jpeg" alt="Barang bukti 1" class="w-full aspect-square object-cover rounded-lg border border-zinc-900" loading="lazy">
+                                <span class="block text-[10px] font-extrabold text-zinc-800 mt-1">Bukti #01</span>
+                            </button>
+                            <button type="button" onclick="openPhotoModal('foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35%20(1).jpeg', 'Bukti #02: Pose ceria kejutan penuh balon!')" class="bg-white p-1.5 rounded-xl border-2 border-zinc-900 shadow-[3px_3px_0px_#18181b] hover:-translate-y-0.5 transition text-center rotate-1 hover:rotate-0">
+                                <img src="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35%20(1).jpeg" alt="Barang bukti 2" class="w-full aspect-square object-cover rounded-lg border border-zinc-900" loading="lazy">
+                                <span class="block text-[10px] font-extrabold text-zinc-800 mt-1">Bukti #02</span>
+                            </button>
+                            <button type="button" onclick="openPhotoModal('foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35%20(2).jpeg', 'Bukti #03: Arsip lawas sejak masih polos-polosnya!')" class="bg-white p-1.5 rounded-xl border-2 border-zinc-900 shadow-[3px_3px_0px_#18181b] hover:-translate-y-0.5 transition text-center -rotate-1 hover:rotate-0">
+                                <img src="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35%20(2).jpeg" alt="Barang bukti 3" class="w-full aspect-square object-cover rounded-lg border border-zinc-900" loading="lazy">
+                                <span class="block text-[10px] font-extrabold text-zinc-800 mt-1">Bukti #03</span>
+                            </button>
+                            <button type="button" onclick="openPhotoModal('foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35%20(3).jpeg', 'Bukti #04: Rapat darurat gosip & ngopi santai!')" class="bg-white p-1.5 rounded-xl border-2 border-zinc-900 shadow-[3px_3px_0px_#18181b] hover:-translate-y-0.5 transition text-center rotate-1 hover:rotate-0">
+                                <img src="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35%20(3).jpeg" alt="Barang bukti 4" class="w-full aspect-square object-cover rounded-lg border border-zinc-900" loading="lazy">
+                                <span class="block text-[10px] font-extrabold text-zinc-800 mt-1">Bukti #04</span>
+                            </button>
+                            <button type="button" onclick="openPhotoModal('foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36.jpeg', 'Bukti #05: Duo jempol paling kompak dan siap huru-hara!')" class="bg-white p-1.5 rounded-xl border-2 border-zinc-900 shadow-[3px_3px_0px_#18181b] hover:-translate-y-0.5 transition text-center -rotate-1 hover:rotate-0">
+                                <img src="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36.jpeg" alt="Barang bukti 5" class="w-full aspect-square object-cover rounded-lg border border-zinc-900" loading="lazy">
+                                <span class="block text-[10px] font-extrabold text-zinc-800 mt-1">Bukti #05</span>
+                            </button>
+                            <button type="button" onclick="openPhotoModal('foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36%20(1).jpeg', 'Bukti #06: Nongkrong gemas sambil nge-spill rencana nikah!')" class="bg-white p-1.5 rounded-xl border-2 border-zinc-900 shadow-[3px_3px_0px_#18181b] hover:-translate-y-0.5 transition text-center rotate-1 hover:rotate-0">
+                                <img src="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36%20(1).jpeg" alt="Barang bukti 6" class="w-full aspect-square object-cover rounded-lg border border-zinc-900" loading="lazy">
+                                <span class="block text-[10px] font-extrabold text-zinc-800 mt-1">Bukti #06</span>
+                            </button>
+                            <button type="button" onclick="openPhotoModal('foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36%20(2).jpeg', 'Bukti #07: Malam penuh tawa bareng sahabat tersayang!')" class="col-span-2 sm:col-span-1 bg-white p-1.5 rounded-xl border-2 border-zinc-900 shadow-[3px_3px_0px_#18181b] hover:-translate-y-0.5 transition text-center -rotate-1 hover:rotate-0">
+                                <img src="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36%20(2).jpeg" alt="Barang bukti 7" class="w-full aspect-square object-cover rounded-lg border border-zinc-900" loading="lazy">
+                                <span class="block text-[10px] font-extrabold text-zinc-800 mt-1">Bukti #07</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Area Interaksi Tombol RSVP Kocak -->
+                    <div class="pt-3 border-t-2 border-zinc-200 text-center space-y-3">
+                        <p class="font-fun text-base font-bold text-zinc-900">
+                            Gimana Tersangka, siap menghadapi kenyataan? 👇
+                        </p>
+
+                        <!-- Box Pop-up Meme Saat Tombol Tolak Dikejar -->
+                        <div id="memeReactionBox" class="hidden bg-zinc-900 text-white p-3 rounded-2xl border-2 border-yellow-400 transition-all">
+                            <div class="flex items-center justify-center gap-2.5">
+                                <span id="memeEmoji" class="text-3xl animate-bounce">😜</span>
+                                <p id="memeText" class="text-xs sm:text-sm font-bold text-yellow-300 text-left">
+                                    Eits, nggak kena! Nggak ada kata nolak buat sahabat!
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Hadir Utama -->
+                        <button onclick="acceptInvitation()" class="w-full bg-emerald-400 hover:bg-emerald-300 text-zinc-900 font-fun font-bold text-lg py-3.5 px-6 rounded-2xl brutal-btn flex items-center justify-center gap-2">
+                            <span>🎉</span>
+                            <span>SIAP HADIR &amp; PASRAH!</span>
+                        </button>
+
+                        <!-- Arena Tombol Tolak Lari-lari -->
+                        <div id="noBtnContainer" class="relative h-16 flex items-center justify-center">
+                            <button id="noBtn" onmouseover="moveNoButton(event)" ontouchstart="moveNoButton(event)" onclick="moveNoButton(event)" class="bg-rose-500 hover:bg-rose-400 text-white font-fun font-bold text-xs sm:text-sm py-2 px-5 rounded-xl brutal-btn">
+                                🏃‍♀️ NGGAK BISA HADIR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAMPILAN 2: TIKET PERAYAAN VIP -->
+        <div id="ticketView" class="hidden space-y-5">
+            <div class="bg-white rounded-3xl overflow-hidden brutal-card">
+                <div class="bg-gradient-to-r from-pink-500 via-rose-500 to-amber-400 text-white px-5 py-4 text-center border-b-4 border-zinc-900">
+                    <span class="inline-block bg-yellow-300 text-zinc-900 text-[11px] font-extrabold px-3 py-0.5 rounded-full border-2 border-zinc-900 mb-1.5 uppercase">
+                        🎟️ VIP BRIDE PASS • RESMI TERKONFIRMASI
+                    </span>
+                    <h2 class="font-fun text-2xl font-bold tracking-wide drop-shadow">
+                        YEAY! RESMI PASRAH &amp; HADIR! 🥳
+                    </h2>
+                </div>
+
+                <div class="p-5 space-y-4 bg-amber-50">
+                    <!-- Foto Joget Perayaan -->
+                    <div class="flex flex-col items-center text-center space-y-2">
+                        <div class="w-28 h-28 rounded-2xl border-3 border-zinc-900 shadow-[4px_4px_0px_#18181b] overflow-hidden bg-white p-1 party-dance">
+                            <img id="ticketPhoto" src="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36.jpeg" alt="Foto VIP Bride" class="w-full h-full object-cover rounded-xl border border-zinc-900">
+                        </div>
+                        <p class="text-[11px] font-extrabold text-zinc-500 uppercase">NAMA TERSANGKA / VIP BRIDE:</p>
+                        <p id="ticketBrideName" class="font-fun text-2xl font-bold text-pink-600">Kharisma Paramita</p>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 border-2 border-emerald-600 text-xs font-extrabold px-3 py-1 rounded-xl">
+                            STATUS: SAH TERJEBAK BERSAMA SAHABAT 💖
+                        </span>
+                    </div>
+
+                    <div class="border-t-2 border-dashed border-zinc-900"></div>
+
+                    <!-- Rincian Tiket -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                        <div class="bg-white p-3 rounded-xl border-2 border-zinc-900">
+                            <p class="font-extrabold text-zinc-500 uppercase">📅 Hari &amp; Tanggal</p>
+                            <p id="ticketDate" class="font-bold text-zinc-900 mt-0.5">Sabtu, 12 Desember 2026</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border-2 border-zinc-900">
+                            <p class="font-extrabold text-zinc-500 uppercase">⏰ Jam Evakuasi</p>
+                            <p id="ticketTime" class="font-bold text-zinc-900 mt-0.5">15.00 WIB – Sampai Capek Ketawa</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border-2 border-zinc-900 sm:col-span-2">
+                            <p class="font-extrabold text-zinc-500 uppercase">🏠 Markas Rahasia (Lokasi)</p>
+                            <p id="ticketLocation" class="font-bold text-zinc-900 mt-0.5">Skysuites, Tempat yang sama seperti dulu</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border-2 border-zinc-900 sm:col-span-2">
+                            <p class="font-extrabold text-zinc-500 uppercase">👗 Dresscode Wajib</p>
+                            <p id="ticketDresscode" class="font-bold text-zinc-900 mt-0.5">Wajib Baju Putih yang Cantekkk dan Kerudung Hitam</p>
+                        </div>
+                    </div>
+
+                    <!-- Barcode Kocak -->
+                    <div class="bg-white p-3 rounded-xl border-2 border-zinc-900 text-center">
+                        <div class="h-8 w-full mb-1" style="background: repeating-linear-gradient(90deg, #18181b 0 3px, transparent 3px 6px, #18181b 6px 8px, transparent 8px 13px, #18181b 13px 18px, transparent 18px 21px);"></div>
+                        <p class="font-mono text-[11px] font-bold tracking-widest text-zinc-700">NO-KABUR-2026-VIP-BRIDE</p>
+                    </div>
+
+                    <!-- Tombol Aksi Tiket -->
+                    <div class="space-y-2.5 pt-1">
+                        <button onclick="triggerMoreConfetti()" class="w-full bg-pink-500 hover:bg-pink-400 text-white font-fun font-bold text-sm py-3 px-4 rounded-xl brutal-btn">
+                            🎊 Lempar Konfeti Lagi!
+                        </button>
+                        <button onclick="backToInvitation()" class="w-full bg-white hover:bg-zinc-100 text-zinc-900 font-fun font-bold text-sm py-2.5 px-4 rounded-xl brutal-btn">
+                            🔙 Kembali ke Undangan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL EDIT UNDANGAN -->
+    <div id="editModal" class="hidden fixed inset-0 z-50 bg-zinc-900/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden brutal-card max-h-[90vh] flex flex-col">
+            <div class="bg-pink-500 text-white px-4 py-3 flex items-center justify-between border-b-4 border-zinc-900">
+                <h3 class="font-fun font-bold text-lg">✏️ Edit Detail Undangan</h3>
+                <button onclick="closeEditModal()" class="bg-white text-zinc-900 w-8 h-8 rounded-full font-extrabold border-2 border-zinc-900 flex items-center justify-center">✕</button>
+            </div>
+            <div class="p-4 space-y-3 overflow-y-auto text-sm">
+                <div class="flex gap-2">
+                    <button type="button" onclick="shareBrideLink()" class="flex-1 bg-sky-300 hover:bg-sky-200 text-zinc-900 font-bold text-xs py-2 px-3 rounded-xl border-2 border-zinc-900">
+                        🔗 Bagikan Link Mode Bride
+                    </button>
+                    <button type="button" onclick="resetDefaultData()" class="bg-zinc-200 hover:bg-zinc-300 text-zinc-900 font-bold text-xs py-2 px-3 rounded-xl border-2 border-zinc-900">
+                        🔄 Reset
+                    </button>
+                </div>
+
+                <div>
+                    <label for="editBrideName" class="block font-bold text-xs mb-1">Nama Tersangka (Bride-to-Be)</label>
+                    <input id="editBrideName" type="text" class="w-full px-3 py-2 rounded-xl border-2 border-zinc-900 font-semibold">
+                </div>
+                <div>
+                    <label for="editCharge" class="block font-bold text-xs mb-1">Pasal Tuduhan</label>
+                    <textarea id="editCharge" rows="3" class="w-full px-3 py-2 rounded-xl border-2 border-zinc-900 font-medium"></textarea>
+                </div>
+                <div>
+                    <label for="editDate" class="block font-bold text-xs mb-1">Hari &amp; Tanggal</label>
+                    <input id="editDate" type="text" class="w-full px-3 py-2 rounded-xl border-2 border-zinc-900 font-semibold">
+                </div>
+                <div>
+                    <label for="editTime" class="block font-bold text-xs mb-1">Jam Evakuasi</label>
+                    <input id="editTime" type="text" class="w-full px-3 py-2 rounded-xl border-2 border-zinc-900 font-semibold">
+                </div>
+                <div>
+                    <label for="editLocation" class="block font-bold text-xs mb-1">Markas Rahasia (Lokasi)</label>
+                    <input id="editLocation" type="text" class="w-full px-3 py-2 rounded-xl border-2 border-zinc-900 font-semibold">
+                </div>
+                <div>
+                    <label for="editDresscode" class="block font-bold text-xs mb-1">Dresscode Wajib</label>
+                    <input id="editDresscode" type="text" class="w-full px-3 py-2 rounded-xl border-2 border-zinc-900 font-semibold">
+                </div>
+                <div>
+                    <label for="editHeroSelect" class="block font-bold text-xs mb-1">Pilih Foto Utama Tersangka (dari folder foto/)</label>
+                    <select id="editHeroSelect" class="w-full px-3 py-2 rounded-xl border-2 border-zinc-900 font-semibold bg-white">
+                        <option value="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36.jpeg">Bukti #05 - Duo Jempol (Default)</option>
+                        <option value="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35.jpeg">Bukti #01 - Squad Balon Ceria</option>
+                        <option value="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35%20(1).jpeg">Bukti #02 - Pose Kejutan</option>
+                        <option value="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35%20(2).jpeg">Bukti #03 - Arsip Lawas</option>
+                        <option value="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.35%20(3).jpeg">Bukti #04 - Rapat Kafe</option>
+                        <option value="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36%20(1).jpeg">Bukti #06 - Spill Rencana</option>
+                        <option value="foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36%20(2).jpeg">Bukti #07 - Besties Night</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="editHeroFile" class="block font-bold text-xs mb-1">Atau Upload Foto Sendiri (Opsional)</label>
+                    <input id="editHeroFile" type="file" accept="image/*" class="w-full px-2 py-1.5 rounded-xl border-2 border-zinc-900 text-xs">
+                </div>
+            </div>
+            <div class="p-4 border-t-2 border-zinc-200 flex justify-end gap-2 bg-zinc-50">
+                <button onclick="closeEditModal()" class="bg-zinc-200 hover:bg-zinc-300 text-zinc-900 font-bold text-xs px-4 py-2 rounded-xl border-2 border-zinc-900">Batal</button>
+                <button onclick="saveEditModal()" class="bg-emerald-400 hover:bg-emerald-300 text-zinc-900 font-bold text-xs px-4 py-2 rounded-xl brutal-btn">💾 Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LIGHTBOX FOTO -->
+    <div id="photoLightboxModal" class="hidden fixed inset-0 z-50 bg-zinc-900/80 backdrop-blur-sm flex items-center justify-center p-4" onclick="if(event.target === this) closePhotoModal()">
+        <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden brutal-card">
+            <div class="bg-yellow-300 px-4 py-2.5 flex items-center justify-between border-b-4 border-zinc-900">
+                <h3 class="font-fun font-bold text-base">📸 Barang Bukti Terpilih</h3>
+                <button onclick="closePhotoModal()" class="bg-white text-zinc-900 w-7 h-7 rounded-full font-extrabold border-2 border-zinc-900 flex items-center justify-center">✕</button>
+            </div>
+            <div class="p-4 space-y-3 text-center">
+                <img id="lightboxImg" src="" alt="Preview Barang Bukti" class="w-full max-h-[55vh] object-contain rounded-2xl border-2 border-zinc-900 bg-zinc-900">
+                <p id="lightboxCaption" class="text-xs sm:text-sm font-bold text-zinc-800"></p>
+                <div class="hidden">
+                    <button onclick="setHeroFromLightbox()" class="hidden flex-1 bg-yellow-300 hover:bg-yellow-200 text-zinc-900 font-fun font-bold text-xs py-2.5 px-3 rounded-xl brutal-btn">
+                        👑 Jadikan Foto Tersangka
+                    </button>
+                    <button onclick="closePhotoModal()" class="hidden bg-emerald-400 hover:bg-emerald-300 text-zinc-900 font-fun font-bold text-xs py-2.5 px-4 rounded-xl brutal-btn">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'bridal_shower_canvas2_v1';
+        const DEFAULT_DATA = {
+            brideName: 'Kharisma Paramita',
+            charge: 'Terbukti secara sah dan meyakinkan nekat sold out duluan, tega meninggalkan teman-teman seperjuangan yang masih jomblo atau hubungannya cuma wacana!',
+            date: 'Sabtu, 12 Desember 2026',
+            time: '15.00 WIB – Sampai Capek Ketawa',
+            location: 'Skysuites, Tempat yang sama seperti dulu',
+            dresscode: 'Wajib Baju Putih yang Cantekkk dan Kerudung Hitam',
+            heroPhoto: 'foto/WhatsApp%20Image%202026-11-18%20at%2008.40.36.jpeg'
+        };
+
+        const MEME_REACTIONS = [
+            { emoji: '😜', text: 'Eits, nggak kena! Nggak ada kata nolak buat sahabat!' },
+            { emoji: '🚨', text: 'ERROR 404: Alasan sibuk atau magernya nggak kedeteksi sistem!' },
+            { emoji: '👮‍♀️', text: 'Tombol tolak sudah disita Divisi Bridesmaids! Pasrah aja!' },
+            { emoji: '💅', text: 'Mau kabur ke mana Calon Manten? Klik yang ijo aja bestie!' },
+            { emoji: '😭', text: 'Tega banget mau ninggalin temen yang masih jomblo?!' },
+            { emoji: '⚡', text: 'Korsleting! Sistem cuma nerima tombol SIAP HADIR & PASRAH!' },
+            { emoji: '🤭', text: 'Meleset terus nih? Udah deh, tiket VIP nunggu dicetak!' }
+        ];
+
+        let state = loadState();
+        let soundOn = false;
+        let dodgeCount = 0;
+        let activeLightboxSrc = '';
+
+        function loadState() {
+            let saved = {};
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) saved = JSON.parse(raw);
+            } catch (e) {}
+
+            const params = new URLSearchParams(window.location.search);
+            const merged = { ...DEFAULT_DATA, ...saved };
+
+            ['brideName', 'charge', 'date', 'time', 'location', 'dresscode', 'heroPhoto'].forEach(k => {
+                const v = params.get(k);
+                if (v !== null && v.trim() !== '') merged[k] = v;
+            });
+
+            if (params.get('mode') === 'bride') {
+                document.getElementById('topControlBar').classList.add('hidden');
+            }
+            return merged;
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {}
+        }
+
+        function renderState() {
+            document.getElementById('displayBrideName').textContent = state.brideName;
+            document.getElementById('displayCharge').textContent = state.charge;
+            document.getElementById('displayDate').textContent = state.date;
+            document.getElementById('displayTime').textContent = state.time;
+            document.getElementById('displayLocation').textContent = state.location;
+            document.getElementById('displayDresscode').textContent = state.dresscode;
+            document.getElementById('heroPhoto').src = state.heroPhoto;
+
+            document.getElementById('ticketBrideName').textContent = state.brideName;
+            document.getElementById('ticketDate').textContent = state.date;
+            document.getElementById('ticketTime').textContent = state.time;
+            document.getElementById('ticketLocation').textContent = state.location;
+            document.getElementById('ticketDresscode').textContent = state.dresscode;
+            document.getElementById('ticketPhoto').src = state.heroPhoto;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastBanner');
+            toast.textContent = msg;
+            toast.classList.remove('hidden');
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => toast.classList.add('hidden'), 2600);
+        }
+
+        // --- Audio Engine: Subway Surfers (Main Theme) 2012 Original MP3 + Interactive SFX ---
+        let audioCtx = null;
+        let userMutedAudio = false;
+        let autoStartDone = false;
+        const bgmAudio = document.getElementById('bgmAudio');
+        if (bgmAudio) {
+            bgmAudio.volume = 0.65;
+            bgmAudio.loop = true;
+        }
+
+        function ensureAudioContext() {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return null;
+            if (!audioCtx) {
+                audioCtx = new Ctx();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(() => {});
+            }
+            return audioCtx;
+        }
+
+        function playToneNote(freq, startTime, duration, type, volume, targetNode, filterFreq) {
+            if (!audioCtx || !targetNode) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, startTime);
+
+            let out = gain;
+            if (filterFreq) {
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(filterFreq, startTime);
+                osc.connect(filter);
+                filter.connect(gain);
+            } else {
+                osc.connect(gain);
+            }
+
+            gain.gain.setValueAtTime(0.0001, startTime);
+            gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+            out.connect(targetNode);
+
+            osc.start(startTime);
+            osc.stop(startTime + duration + 0.02);
+        }
+
+        function removeGestureAutoStartListeners() {
+            document.removeEventListener('pointerdown', autoStartAudioOnFirstTap);
+            document.removeEventListener('touchstart', autoStartAudioOnFirstTap);
+            document.removeEventListener('click', autoStartAudioOnFirstTap);
+            document.removeEventListener('keydown', autoStartAudioOnFirstTap);
+        }
+
+        function startSubwayBGM(isUserGesture = false) {
+            if (!bgmAudio || userMutedAudio) return Promise.resolve(false);
+            bgmAudio.volume = 0.65;
+            bgmAudio.loop = true;
+            if (!bgmAudio.paused) {
+                soundOn = true;
+                autoStartDone = true;
+                updateSoundButtonUI();
+                removeGestureAutoStartListeners();
+                return Promise.resolve(true);
+            }
+            if (isUserGesture) {
+                soundOn = true;
+                updateSoundButtonUI();
+            }
+            try {
+                const playPromise = bgmAudio.play();
+                if (playPromise && typeof playPromise.then === 'function') {
+                    return playPromise.then(() => {
+                        if (userMutedAudio) {
+                            bgmAudio.pause();
+                            return false;
+                        }
+                        soundOn = true;
+                        autoStartDone = true;
+                        updateSoundButtonUI();
+                        removeGestureAutoStartListeners();
+                        return true;
+                    }).catch(() => {
+                        soundOn = false;
+                        autoStartDone = false;
+                        updateSoundButtonUI();
+                        return false;
+                    });
+                }
+                soundOn = true;
+                autoStartDone = true;
+                updateSoundButtonUI();
+                removeGestureAutoStartListeners();
+                return Promise.resolve(true);
+            } catch (e) {
+                soundOn = false;
+                autoStartDone = false;
+                updateSoundButtonUI();
+                return Promise.resolve(false);
+            }
+        }
+
+        function stopSubwayBGM() {
+            if (bgmAudio && !bgmAudio.paused) {
+                bgmAudio.pause();
+            }
+        }
+
+        function updateSoundButtonUI() {
+            const icon = document.getElementById('soundIcon');
+            const text = document.getElementById('soundText');
+            if (soundOn) {
+                icon.textContent = '🔊';
+                text.textContent = 'Musik Subway Surfer: ON';
+            } else {
+                icon.textContent = '🎵';
+                text.textContent = 'Musik Subway Surfer: OFF';
+            }
+        }
+
+        async function toggleAudio() {
+            if (soundOn) {
+                soundOn = false;
+                userMutedAudio = true;
+                autoStartDone = true;
+                stopSubwayBGM();
+                updateSoundButtonUI();
+            } else {
+                soundOn = true;
+                userMutedAudio = false;
+                autoStartDone = true;
+                updateSoundButtonUI();
+                const started = await startSubwayBGM(true);
+                if (started) {
+                    showToast('🏃‍♀️ Musik Subway Surfers ON!');
+                }
+            }
+        }
+
+        function autoStartAudioOnFirstTap(e) {
+            if (autoStartDone || userMutedAudio || soundOn) return;
+            if (e && e.target && e.target.closest && e.target.closest('#soundToggleBtn')) return;
+            ensureAudioContext();
+            startSubwayBGM(true);
+        }
+
+        document.addEventListener('pointerdown', autoStartAudioOnFirstTap, { passive: true });
+        document.addEventListener('touchstart', autoStartAudioOnFirstTap, { passive: true });
+        document.addEventListener('click', autoStartAudioOnFirstTap, { passive: true });
+        document.addEventListener('keydown', autoStartAudioOnFirstTap, { passive: true });
+
+        startSubwayBGM(false);
+
+        function playPopSound() {
+            if (!soundOn) return;
+            try {
+                const ctx = ensureAudioContext();
+                if (ctx) playToneNote(523.25, ctx.currentTime, 0.08, 'triangle', 0.18, ctx.destination);
+            } catch (e) {}
+        }
+
+        function playBoingSound() {
+            if (!soundOn) return;
+            try {
+                const ctx = ensureAudioContext();
+                if (ctx) {
+                    const now = ctx.currentTime;
+                    playToneNote(392.00, now, 0.07, 'square', 0.12, ctx.destination);
+                    playToneNote(587.33, now + 0.06, 0.09, 'square', 0.14, ctx.destination);
+                }
+            } catch (e) {}
+        }
+
+        function playFanfareSound() {
+            if (!soundOn) return;
+            try {
+                const ctx = ensureAudioContext();
+                if (ctx) {
+                    const now = ctx.currentTime;
+                    [523.25, 659.25, 783.99].forEach(f => playToneNote(f, now, 0.14, 'triangle', 0.14, ctx.destination));
+                    [587.33, 698.46, 880.00].forEach(f => playToneNote(f, now + 0.14, 0.14, 'triangle', 0.14, ctx.destination));
+                    [523.25, 659.25, 783.99, 1046.50].forEach(f => playToneNote(f, now + 0.28, 0.3, 'triangle', 0.16, ctx.destination));
+                }
+            } catch (e) {}
+        }
+
+        // --- Bar Controls ---
+        function hideControlBar() {
+            document.getElementById('topControlBar').classList.add('hidden');
+            document.getElementById('showControlBtn').classList.remove('hidden');
+        }
+
+        function showControlBar() {
+            document.getElementById('topControlBar').classList.remove('hidden');
+            document.getElementById('showControlBtn').classList.add('hidden');
+        }
+
+        // --- Edit Modal ---
+        function openEditModal() {
+            playPopSound();
+            document.getElementById('editBrideName').value = state.brideName;
+            document.getElementById('editCharge').value = state.charge;
+            document.getElementById('editDate').value = state.date;
+            document.getElementById('editTime').value = state.time;
+            document.getElementById('editLocation').value = state.location;
+            document.getElementById('editDresscode').value = state.dresscode;
+            document.getElementById('editHeroFile').value = '';
+
+            const sel = document.getElementById('editHeroSelect');
+            if (Array.from(sel.options).some(o => o.value === state.heroPhoto)) {
+                sel.value = state.heroPhoto;
+            }
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function resizeUploadedFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const maxSide = 720;
+                        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+                        const c = document.createElement('canvas');
+                        c.width = Math.round(img.width * scale);
+                        c.height = Math.round(img.height * scale);
+                        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                        resolve(c.toDataURL('image/jpeg', 0.85));
+                    };
+                    img.onerror = reject;
+                    img.src = reader.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function saveEditModal() {
+            playPopSound();
+            let hero = document.getElementById('editHeroSelect').value;
+            const fileInput = document.getElementById('editHeroFile');
+            if (fileInput.files && fileInput.files[0]) {
+                try {
+                    hero = await resizeUploadedFile(fileInput.files[0]);
+                } catch (e) {}
+            }
+
+            state = {
+                brideName: document.getElementById('editBrideName').value.trim() || DEFAULT_DATA.brideName,
+                charge: document.getElementById('editCharge').value.trim() || DEFAULT_DATA.charge,
+                date: document.getElementById('editDate').value.trim() || DEFAULT_DATA.date,
+                time: document.getElementById('editTime').value.trim() || DEFAULT_DATA.time,
+                location: document.getElementById('editLocation').value.trim() || DEFAULT_DATA.location,
+                dresscode: document.getElementById('editDresscode').value.trim() || DEFAULT_DATA.dresscode,
+                heroPhoto: hero
+            };
+            saveState();
+            renderState();
+            closeEditModal();
+            showToast('✅ Undangan berhasil diperbarui!');
+        }
+
+        function resetDefaultData() {
+            state = { ...DEFAULT_DATA };
+            saveState();
+            renderState();
+            openEditModal();
+            showToast('🔄 Pengaturan dikembalikan ke default!');
+        }
+
+        async function shareBrideLink() {
+            const url = new URL(window.location.href);
+            url.search = '';
+            url.searchParams.set('brideName', state.brideName);
+            url.searchParams.set('charge', state.charge);
+            url.searchParams.set('date', state.date);
+            url.searchParams.set('time', state.time);
+            url.searchParams.set('location', state.location);
+            url.searchParams.set('dresscode', state.dresscode);
+            if (!state.heroPhoto.startsWith('data:')) {
+                url.searchParams.set('heroPhoto', state.heroPhoto);
+            }
+            url.searchParams.set('mode', 'bride');
+            try {
+                await navigator.clipboard.writeText(url.toString());
+                showToast('🔗 Link undangan mode Bride berhasil disalin!');
+            } catch (e) {
+                window.prompt('Salin link undangan untuk calon pengantin:', url.toString());
+            }
+        }
+
+        // --- Lightbox Foto ---
+        function openPhotoModal(src, caption) {
+            playPopSound();
+            activeLightboxSrc = src;
+            document.getElementById('lightboxImg').src = src;
+            document.getElementById('lightboxCaption').textContent = caption;
+            document.getElementById('photoLightboxModal').classList.remove('hidden');
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photoLightboxModal').classList.add('hidden');
+        }
+
+        function setHeroFromLightbox() {
+            if (!activeLightboxSrc) return;
+            playPopSound();
+            state.heroPhoto = activeLightboxSrc;
+            saveState();
+            renderState();
+            closePhotoModal();
+            showToast('👑 Foto Tersangka Utama berhasil diganti!');
+        }
+
+        // --- Runaway "NGGAK BISA HADIR" Button ---
+        function moveNoButton(event) {
+            if (event) event.preventDefault();
+            dodgeCount++;
+            playBoingSound();
+
+            const container = document.getElementById('noBtnContainer');
+            const btn = document.getElementById('noBtn');
+            const maxX = Math.max(0, container.clientWidth - btn.offsetWidth);
+            const maxY = Math.max(0, container.clientHeight - btn.offsetHeight);
+
+            const nextX = Math.round(Math.random() * maxX);
+            const nextY = Math.round(Math.random() * maxY);
+
+            btn.style.position = 'absolute';
+            btn.style.left = nextX + 'px';
+            btn.style.top = nextY + 'px';
+
+            const reaction = MEME_REACTIONS[(dodgeCount - 1) % MEME_REACTIONS.length];
+            document.getElementById('memeEmoji').textContent = reaction.emoji;
+            document.getElementById('memeText').textContent = `${reaction.text} (Kabur ${dodgeCount}x)`;
+            document.getElementById('memeReactionBox').classList.remove('hidden');
+        }
+
+        // --- Confetti & Ticket Perayaan ---
+        let confettiAnimId = null;
+
+        function launchConfetti() {
+            if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const colors = ['#ec4899', '#fde047', '#34d399', '#38bdf8', '#ef4444', '#a855f7'];
+            const pieces = Array.from({ length: 140 }, () => ({
+                x: Math.random() * canvas.width,
+                y: -20 - Math.random() * canvas.height * 0.5,
+                w: 8 + Math.random() * 6,
+                h: 6 + Math.random() * 6,
+                vx: (Math.random() - 0.5) * 4,
+                vy: 3 + Math.random() * 5,
+                rot: Math.random() * Math.PI * 2,
+                vr: (Math.random() - 0.5) * 0.2,
+                color: colors[Math.floor(Math.random() * colors.length)]
+            }));
+
+            let frame = 0;
+            function draw() {
+                frame++;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.05;
+                    p.rot += p.vr;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    ctx.restore();
+                });
+                if (frame < 180) {
+                    confettiAnimId = requestAnimationFrame(draw);
+                } else {
+                    confettiAnimId = null;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            confettiAnimId = requestAnimationFrame(draw);
+        }
+
+        function triggerMoreConfetti() {
+            playFanfareSound();
+            launchConfetti();
+        }
+
+        function acceptInvitation() {
+            playFanfareSound();
+            launchConfetti();
+            document.getElementById('invitationView').classList.add('hidden');
+            document.getElementById('ticketView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function backToInvitation() {
+            playPopSound();
+            document.getElementById('ticketView').classList.add('hidden');
+            document.getElementById('invitationView').classList.remove('hidden');
+        }
+
+        // Inisialisasi tampilan awal
+        renderState();
+    </script>
+</body>
+</html>
